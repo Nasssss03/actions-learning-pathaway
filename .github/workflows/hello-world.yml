@@ -7,5 +7,8 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
+      - name: Verify file existence
+        run: ls -l hello_world.txt || echo "File not found"
+
       - name: Say hello world!
         run: cat hello_world.txt
