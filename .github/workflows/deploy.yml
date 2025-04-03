@@ -1,49 +1,38 @@
-name: Deploy Next.js site to Pages
+deploy:
+  needs: test
+  runs-on: ubuntu-latest
+  permissions:
+    contents: write
+    pages: write
+    id-token: write
+  environment:
+    name: production
+    url: ${{ steps.deployment.outputs.page_url }}
+  steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-on:
-  push:
-    branches: ["main"]  
-  workflow_dispatch:  
-permissions:
-  contents: write
-  pages: write
-  id-token: write
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
 
-jobs:
-  deploy:
-    needs: test  
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: ${{ steps.deployment.outputs.page_url }}
+    - name: Configure GitHub Pages
+      uses: actions/configure-pages@v3
+      with:
+        static_site_generator: next
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+    - run: npm install
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18.x'
+    - run: npm run build
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v3
-        with:
-          static_site_generator: next
+    - name: Upload artifacts
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: "./out"
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build project
-        run: npm run build
-
-      - name: Upload artifacts
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: "./out"
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
